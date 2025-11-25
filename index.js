@@ -3,11 +3,12 @@ const userRoutes = require("./src/routes/user.routes")
 const connectDB = require('./src/config/db')
 const app = express()
 const cors = require("cors")
-
+const ProductsRouter = require("./src/routes/product.routes")
 app.use(cors())
 
 app.use(express.json())
 app.use('/' , userRoutes)
+app.use("/", ProductsRouter)
 connectDB()
 
 const PORT = process.env.PORT || 8080

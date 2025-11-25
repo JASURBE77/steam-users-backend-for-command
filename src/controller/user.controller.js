@@ -1,6 +1,8 @@
 const UserModel = require("../models/user.model");
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 
+// Admin create
 exports.create = async (req, res) => {
   try {
     const { name, surname, username, balance, avatar, email, password } = req.body;
@@ -40,6 +42,7 @@ exports.create = async (req, res) => {
   }
 };
 
+// 🔹 REGISTER bilan token qaytarish
 exports.register = async (req, res) => {
   try {
     const { name, surname, username, email, password } = req.body;
@@ -59,17 +62,25 @@ exports.register = async (req, res) => {
       name,
       surname,
       username,
-      balance: 0,             
-      avatar: "default.png",  
+      balance: 0,
+      avatar: "default.png",
       email,
       password: hashedPassword,
     });
 
     await newUser.save();
 
+    // 🔹 TOKEN YARATISH
+    const token = jwt.sign(
+      { id: newUser._id, username: newUser.username, name: newUser.name },
+      "super_secret_key",
+      { expiresIn: "7d" }
+    );
+
     return res.status(201).json({
       message: "Ro‘yxatdan o‘tish muvaffaqiyatli",
       user: newUser,
+      token, // 🔹 Token shu yerda qaytariladi
     });
 
   } catch (e) {
@@ -80,6 +91,7 @@ exports.register = async (req, res) => {
   }
 };
 
+// LOGIN
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -94,9 +106,17 @@ exports.login = async (req, res) => {
       return res.status(400).json({ message: "Email yoki parol noto‘g‘ri" });
     }
 
+    // 🔹 TOKEN YARATAMIZ
+    const token = jwt.sign(
+      { id: user._id, username: user.username, name: user.name },
+      "super_secret_key",
+      { expiresIn: "7d" }
+    );
+
     return res.status(200).json({
       message: "Login muvaffaqiyatli",
-      user,
+      token,
+      user
     });
 
   } catch (e) {
@@ -107,6 +127,7 @@ exports.login = async (req, res) => {
   }
 };
 
+// USER CRUD
 exports.get = async (req, res) => {
   try {
     const users = await UserModel.find();
@@ -144,6 +165,7 @@ exports.deleted = async (req, res) => {
     });
   }
 };
+
 exports.update = async (req, res) => {
   try {
     const { id } = req.params;
