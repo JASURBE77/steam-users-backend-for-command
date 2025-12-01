@@ -173,6 +173,7 @@ exports.getProfile = async (req, res) => {
   try {
     const user = await UserModel.findById(req.userId).select("-password");
     if (!user) return res.status(404).json({ message: "User topilmadi" });
+
     return res.status(200).json({ message: "Profile ma’lumotlari", user });
   } catch (e) {
     return res.status(500).json({ message: "Server xatosi", error: e.message });

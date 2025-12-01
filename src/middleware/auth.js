@@ -1,33 +1,38 @@
-    // const jwt = require("jsonwebtoken");
 
-    // module.exports = (req, res, next) => {
-    // const token = req.headers.authorization?.split(" ")[1];
+// const jwt = require("jsonwebtoken");
 
-    // if (!token) {
-    //     return res.status(401).json({ message: "Token kerak (Bearer token)" });
-    // }
+// module.exports = (req, res, next) => {
+//     const token = req.headers.authorization?.split(" ")[1]; // Bearer TOKEN
 
-    // try {
-    //     const decoded = jwt.verify(token, "super_secret_key");
-    //     req.user = decoded;     // { id: USER_ID }
-    //     next();
+//     if (!token) {
+//         return res.status(401).json({ message: "Token kerak (Bearer token)" });
+//     }
 
-    // } catch (error) {
-    //     return res.status(401).json({ message: "Token noto‘g‘ri", error: error.message });
-    // }
-    // };
+//     try {
+//         const decoded = jwt.verify(token, "super_secret_key"); // Secret controller bilan bir xil bo‘lishi kerak
+//         req.user = decoded; // { id: USER_ID }
+//         next();
+//     } catch (err) {
+//         return res.status(401).json({ message: "Token noto‘g‘ri", error: err.message });
+//     }
+// };
 const jwt = require("jsonwebtoken");
 
 module.exports = (req, res, next) => {
-    const token = req.headers.authorization?.split(" ")[1]; // Bearer TOKEN
+    const authHeader = req.headers.authorization; // Bearer TOKEN
 
-    if (!token) {
+    if (!authHeader) {
         return res.status(401).json({ message: "Token kerak (Bearer token)" });
     }
 
+    const token = authHeader.split(" ")[1];
+    if (!token) {
+        return res.status(401).json({ message: "Token noto‘g‘ri" });
+    }
+
     try {
-        const decoded = jwt.verify(token, "super_secret_key"); // Secret controller bilan bir xil bo‘lishi kerak
-        req.user = decoded; // { id: USER_ID }
+        const decoded = jwt.verify(token, "super_secret_key");
+        req.userId = decoded.id; // 🔹 req.userId ga saqlash
         next();
     } catch (err) {
         return res.status(401).json({ message: "Token noto‘g‘ri", error: err.message });
