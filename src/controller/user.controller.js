@@ -1,7 +1,7 @@
 const UserModel = require("../models/user.model");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-
+const sendEmail = require("../utils/sendEmail");
 // 🔹 Middleware: Tokenni tekshiradi
 exports.authMiddleware = (req, res, next) => {
   const authHeader = req.headers.authorization;
@@ -177,5 +177,55 @@ exports.getProfile = async (req, res) => {
     return res.status(200).json({ message: "Profile ma’lumotlari", user });
   } catch (e) {
     return res.status(500).json({ message: "Server xatosi", error: e.message });
+  }
+};
+
+
+exports.forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const user = await UserModel.findOne({ email });
+    if (!user) return res.status(400).json({ message: "Email topilmadi" });
+
+    const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
+    user.resetCode = resetCode;
+    user.resetCodeExpire = new Date(Date.now() + 15 * 60 * 1000); // 15 daqiqa
+    await user.save();
+
+    await sendEmail(user.email, "Parolni tiklash kodi", `<p>Sizning reset kodingiz: <b>${resetCode}</b></p>`);
+
+    res.json({ message: "Reset kodi emailga yuborildi" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server xatosi", error: err.message });
+  }
+};
+
+exports.resetPassword = async (req, res) => {
+  try {
+    const { code, newPassword } = req.body;
+    if (!code || !newPassword) {
+      return res.status(400).json({ message: "Kod va yangi parol majburiy" });
+    }
+
+    // 🔹 code bo‘yicha foydalanuvchini topish
+    const user = await UserModel.findOne({ resetCode: code });
+    console.log("User topildi:", user);
+    if (!user) return res.status(404).json({ message: "Kod noto‘g‘ri yoki topilmadi" });
+
+    if (user.resetCodeExpire < new Date()) {
+      return res.status(400).json({ message: "Kodning muddati tugagan" });
+    }
+
+    const hashed = await bcrypt.hash(newPassword, 10);
+    user.password = hashed;
+    user.resetCode = undefined;
+    user.resetCodeExpire = undefined;
+    await user.save();
+
+    res.json({ message: "Parol muvaffaqiyatli yangilandi" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server xatosi", error: err.message });
   }
 };

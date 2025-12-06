@@ -1,4 +1,4 @@
-const {create, getProfile, get, deleted, update, login, register} = require("../controller/user.controller")
+const {create, getProfile, get, deleted, update, login, register, forgotPassword, resetPassword} = require("../controller/user.controller")
 const express = require("express")
 const router = express.Router()
 const  auth = require("../middleware/auth")
@@ -9,5 +9,6 @@ router.put("/updated/user/:id", update)
 router.get("/user/profile", auth, getProfile)
 router.post("/user/login", login)
 router.post("/user/create/register", register)
-
+router.post("/user/forgot-password" , forgotPassword)
+router.post("/user/reset-password", resetPassword)
 module.exports = router 

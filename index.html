@@ -2,72 +2,71 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Product qo‘shish</title>
+  <title>Forgot & Reset Password</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; max-width: 500px; margin: auto; }
+    input, button { display: block; margin: 10px 0; padding: 8px; width: 100%; }
+    button { cursor: pointer; }
+    pre { background: #f0f0f0; padding: 10px; white-space: pre-wrap; word-wrap: break-word; }
+  </style>
 </head>
 <body>
-  <h1>Login</h1>
-  <input type="email" id="email" placeholder="Email">
-  <input type="password" id="password" placeholder="Parol">
-  <button id="loginBtn">Login</button>
 
-  <h1>Product qo‘shish</h1>
-  <input type="text" id="title" placeholder="Title">
-  <input type="text" id="description" placeholder="Description">
-  <input type="number" id="price" placeholder="Price">
-  <input type="text" id="images" placeholder="Images URL, comma separated">
-  <input type="text" id="category" placeholder="Category">
-  <input type="number" id="rating" placeholder="Rating">
-  <button id="addProductBtn">Qo‘shish</button>
+  <h1>Forgot Password</h1>
+  <input type="email" id="forgotEmail" placeholder="Email">
+  <button id="forgotBtn">Send Reset Code</button>
+
+  <h1>Reset Password</h1>
+  <input type="text" id="resetCode" placeholder="6 xonali kod">
+  <input type="text" id="newPassword" placeholder="Yangi parol">
+  <button id="resetBtn">Reset Password</button>
 
   <pre id="output"></pre>
 
   <script>
-    let token = "";
+    const output = document.getElementById("output");
 
-    document.getElementById("loginBtn").addEventListener("click", async () => {
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
+    // 🔹 Forgot password: emailga 6 xonali kod yuborish
+    document.getElementById("forgotBtn").addEventListener("click", async () => {
+      const email = document.getElementById("forgotEmail").value;
+      if(!email) { output.textContent = "Email kiriting!"; return; }
 
-      const res = await fetch("http://localhost:8080/user/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password })
-      });
-
-      const data = await res.json();
-      if(res.ok) {
-        token = data.token;
-        document.getElementById("output").textContent = "Login muvaffaqiyatli. Token olindi.";
-      } else {
-        document.getElementById("output").textContent = data.message;
+      try {
+        const res = await fetch("http://localhost:8080/user/forgot-password", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email })
+        });
+        const data = await res.json();
+        output.textContent = JSON.stringify(data, null, 2);
+      } catch(err) {
+        output.textContent = "Xatolik: " + err.message;
       }
     });
 
-    document.getElementById("addProductBtn").addEventListener("click", async () => {
-      const title = document.getElementById("title").value;
-      const description = document.getElementById("description").value;
-      const price = parseFloat(document.getElementById("price").value);
-      const images = document.getElementById("images").value.split(",");
-      const category = document.getElementById("category").value;
-      const rating = parseFloat(document.getElementById("rating").value);
+    // 🔹 Reset password: faqat 6 xonali kod + yangi parol
+    document.getElementById("resetBtn").addEventListener("click", async () => {
+      const code = document.getElementById("resetCode").value;
+      const newPassword = document.getElementById("newPassword").value;
 
-      if(!token) {
-        document.getElementById("output").textContent = "Avval login qilishingiz kerak!";
+      if(!code || !newPassword) {
+        output.textContent = "Kod va yangi parolni kiriting!";
         return;
       }
 
-      const res = await fetch("http://localhost:8080/product/post", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer " + token
-        },
-        body: JSON.stringify({ title, description, price, images, category, rating })
-      });
-
-      const data = await res.json();
-      document.getElementById("output").textContent = JSON.stringify(data, null, 2);
+      try {
+        const res = await fetch("http://localhost:8080/user/reset-password", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ code, newPassword })
+        });
+        const data = await res.json();
+        output.textContent = JSON.stringify(data, null, 2);
+      } catch(err) {
+        output.textContent = "Xatolik: " + err.message;
+      }
     });
   </script>
+
 </body>
 </html>

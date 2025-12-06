@@ -6,6 +6,7 @@ const cors = require("cors")
 const steamgameRouter = require("./src/routes/game.routes")
 const AppleUserRouter = require("./src/routes/Apple.user.routes")
 const ProductsRouter = require("./src/routes/product.routes")
+
 app.use(cors())
 
 app.use(express.json())
